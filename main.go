@@ -15,6 +15,7 @@ func main() {
 		Map: make(map[string]func(*config.State, config.CommandInput) error),
 	}
 	commands.Register("login", config.HandlerLogin)
+	commands.Register("register", config.HandlerRegister)
 	conf := config.Read()
 	db, err := sql.Open("postgres", conf.DBurl)
 	if err != nil {

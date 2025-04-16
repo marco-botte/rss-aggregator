@@ -37,6 +37,7 @@ func (c *Config) SetUser(user string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Printf("User has been set to: %s\n", user)
 }
 
 func configLocation() string {

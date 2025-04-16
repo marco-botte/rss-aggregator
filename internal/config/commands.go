@@ -1,10 +1,14 @@
 package config
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
 	"rss-aggregator/internal/database"
+	"time"
+
+	"github.com/google/uuid"
 )
 
 type CommandInput struct {
@@ -33,10 +37,38 @@ func HandlerLogin(s *State, cmd CommandInput) error {
 		fmt.Println("Username is required")
 		os.Exit(1)
 	}
-	user := cmd.Args[1]
-	s.Config.SetUser(user)
-	fmt.Printf("User has been set to: %s\n", user)
+	username := cmd.Args[1]
+	user, err := s.Db.GetUser(context.Background(), username)
+	if err != nil {
+		fmt.Println("User must exist to be logged in")
+		os.Exit(1)
+	}
+	s.Config.SetUser(user.Name)
 	return nil
+}
+func HandlerRegister(s *State, cmd CommandInput) error {
+	if len(cmd.Args) == 1 {
+		fmt.Println("Name is required")
+		os.Exit(1)
+	}
+	user, err := s.Db.CreateUser(context.Background(), userParams(cmd.Args[1]))
+	if err != nil {
+		fmt.Printf("Error. User with name may already exist. %s\n", err)
+		os.Exit(1)
+	}
+	fmt.Printf("User has been registered:\n User:\t%v\n", user)
+	s.Config.SetUser(user.Name)
+	return nil
+}
+
+func userParams(name string) database.CreateUserParams {
+	now := time.Now()
+	return database.CreateUserParams{
+		ID:        uuid.New(),
+		CreatedAt: now,
+		UpdatedAt: now,
+		Name:      name,
+	}
 }
 
 func (c *Commands) Register(name string, f func(*State, CommandInput) error) {
