@@ -17,6 +17,7 @@ func main() {
 	commands.Register("login", config.HandlerLogin)
 	commands.Register("reset", config.HandlerReset)
 	commands.Register("register", config.HandlerRegister)
+	commands.Register("users", config.HandlerListUsers)
 	conf := config.Read()
 	db, err := sql.Open("postgres", conf.DBurl)
 	if err != nil {

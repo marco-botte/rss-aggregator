@@ -46,6 +46,7 @@ func HandlerLogin(s *State, cmd CommandInput) error {
 	s.Config.SetUser(user.Name)
 	return nil
 }
+
 func HandlerRegister(s *State, cmd CommandInput) error {
 	if len(cmd.Args) == 1 {
 		fmt.Println("Name is required")
@@ -60,6 +61,7 @@ func HandlerRegister(s *State, cmd CommandInput) error {
 	s.Config.SetUser(user.Name)
 	return nil
 }
+
 func HandlerReset(s *State, cmd CommandInput) error {
 	err := s.Db.DeleteUsers(context.Background())
 	if err != nil {
@@ -69,6 +71,23 @@ func HandlerReset(s *State, cmd CommandInput) error {
 	fmt.Println("Database successfully resetted")
 	return nil
 }
+
+func HandlerListUsers(s *State, cmd CommandInput) error {
+	users, err := s.Db.GetUsers(context.Background())
+	if err != nil {
+		fmt.Printf("Could not retrieve data. %s\n", err)
+		os.Exit(1)
+	}
+	for _, user := range users {
+		user_msg := fmt.Sprintf("* %v", user.Name)
+		if user.Name == s.Config.Username {
+			user_msg = user_msg + " (current)"
+		}
+		fmt.Println(user_msg)
+	}
+	return nil
+}
+
 func userParams(name string) database.CreateUserParams {
 	now := time.Now()
 	return database.CreateUserParams{
