@@ -1,9 +1,13 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"os"
 	"rss-aggregator/internal/config"
+	"rss-aggregator/internal/database"
+
+	_ "github.com/lib/pq"
 )
 
 func main() {
@@ -11,9 +15,15 @@ func main() {
 		Map: make(map[string]func(*config.State, config.CommandInput) error),
 	}
 	commands.Register("login", config.HandlerLogin)
-
+	conf := config.Read()
+	db, err := sql.Open("postgres", conf.DBurl)
+	if err != nil {
+		fmt.Printf("Error when opening db:\t %s\n", err)
+	}
+	dbQueries := database.New(db)
 	state := &config.State{
-		Config: config.Read(),
+		Db:     dbQueries,
+		Config: conf,
 	}
 	args := config.CleanArgs(os.Args)
 	_, ok := commands.Map[args[0]]
@@ -26,7 +36,7 @@ func main() {
 		Name: args[0],
 		Args: args,
 	}
-	err := commands.Run(state, commInput)
+	err = commands.Run(state, commInput)
 	if err != nil {
 		fmt.Printf("Error when running command:\t %s\n", err)
 	}

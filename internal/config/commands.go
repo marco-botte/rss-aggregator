@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"rss-aggregator/internal/database"
 )
 
 type CommandInput struct {
@@ -11,6 +12,7 @@ type CommandInput struct {
 	Args []string
 }
 type State struct {
+	Db     *database.Queries
 	Config *Config
 }
 
