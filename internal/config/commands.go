@@ -87,7 +87,15 @@ func HandlerListUsers(s *State, cmd CommandInput) error {
 	}
 	return nil
 }
-
+func HandlerAgg(s *State, cmd CommandInput) error {
+	feed, err := FetchFeed(context.Background(), "https://www.wagslane.dev/index.xml")
+	if err != nil {
+		fmt.Printf("Error while fetching feed. %s\n", err)
+		os.Exit(1)
+	}
+	fmt.Printf("%v\n", feed)
+	return nil
+}
 func userParams(name string) database.CreateUserParams {
 	now := time.Now()
 	return database.CreateUserParams{
