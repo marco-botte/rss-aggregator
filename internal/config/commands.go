@@ -60,7 +60,15 @@ func HandlerRegister(s *State, cmd CommandInput) error {
 	s.Config.SetUser(user.Name)
 	return nil
 }
-
+func HandlerReset(s *State, cmd CommandInput) error {
+	err := s.Db.DeleteUsers(context.Background())
+	if err != nil {
+		fmt.Printf("Error while resetting database. %s\n", err)
+		os.Exit(1)
+	}
+	fmt.Println("Database successfully resetted")
+	return nil
+}
 func userParams(name string) database.CreateUserParams {
 	now := time.Now()
 	return database.CreateUserParams{
