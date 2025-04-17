@@ -165,6 +165,31 @@ func HandlerFollow(s *State, cmd CommandInput) error {
 	fmt.Printf("Feed %s has been followed by %s, follow_id: %s\n", feed.Name, user.Name, feed_follow.ID)
 	return nil
 }
+
+func HandlerUnfollow(s *State, cmd CommandInput) error {
+	if len(cmd.Args) == 1 {
+		fmt.Println("Feed name is required")
+		os.Exit(1)
+	}
+	user, err := s.Db.GetUser(context.Background(), s.Config.Username)
+	if err != nil {
+		fmt.Printf("Error. User may not exist. %s\n", err)
+		os.Exit(1)
+	}
+	feed, err := s.Db.GetFeed(context.Background(), cmd.Args[1])
+	if err != nil {
+		fmt.Printf("Error. Feed may not exist. %s\n", err)
+		os.Exit(1)
+	}
+	params := database.RemoveFeedFollowParams{ID: user.ID, Url: feed.Url}
+	err = s.Db.RemoveFeedFollow(context.Background(), params)
+	if err != nil {
+		fmt.Printf("Error removing feed %s\n", err)
+		os.Exit(1)
+	}
+	fmt.Printf("Feed %s has been unfollowed by %s\n", feed.Name, user.Name)
+	return nil
+}
 func HandlerFollowing(s *State, cmd CommandInput) error {
 	user, err := s.Db.GetUser(context.Background(), s.Config.Username)
 	if err != nil {
