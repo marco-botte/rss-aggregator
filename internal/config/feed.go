@@ -10,7 +10,10 @@ import (
 	"io"
 	"net/http"
 	"rss-aggregator/internal/database"
+	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Channel struct {
@@ -96,10 +99,32 @@ func ScrapeFeeds(s *State, cmd CommandInput) error {
 		fmt.Printf("Error fetching feed: %v", err)
 		return nil
 	}
-	fmt.Printf("Titles from : %s\n", rss_feed.Channel.Title)
+	fmt.Printf("Save new posts from : %s\n", rss_feed.Channel.Title)
 	for _, item := range rss_feed.Channel.Item {
-		fmt.Printf("* %s\n", item.Title)
-
+		post, err := s.Db.CreatePost(context.Background(), postParams(&item, feed.ID))
+		if err != nil {
+			if strings.Contains(err.Error(), `duplicate key value violates unique constraint "posts_url_key"`) {
+				continue
+			} else {
+				fmt.Printf("Error saving post to db %v\n", err)
+			}
+		} else {
+			fmt.Printf("* Added post %s\n", post.Title)
+		}
 	}
 	return nil
+}
+
+func postParams(item *RSSItem, feedID uuid.UUID) database.CreatePostParams {
+	now := time.Now()
+	return database.CreatePostParams{
+		ID:          uuid.New(),
+		CreatedAt:   now,
+		UpdatedAt:   now,
+		Title:       item.Title,
+		Url:         item.Link,
+		Description: sql.NullString{String: item.Description, Valid: true},
+		PublishedAt: sql.NullTime{Time: now, Valid: false}, // handle published at!
+		FeedID:      feedID,
+	}
 }
