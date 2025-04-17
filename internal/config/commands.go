@@ -81,7 +81,7 @@ func HandlerReset(s *State, cmd CommandInput) error {
 func HandlerListUsers(s *State, cmd CommandInput) error {
 	users, err := s.Db.GetUsers(context.Background())
 	if err != nil {
-		fmt.Printf("Could not retrieve data. %s\n", err)
+		fmt.Printf("Could not retrieve users. %s\n", err)
 		os.Exit(1)
 	}
 	for _, user := range users {
@@ -93,6 +93,20 @@ func HandlerListUsers(s *State, cmd CommandInput) error {
 	}
 	return nil
 }
+
+func HandlerListFeeds(s *State, cmd CommandInput) error {
+	feeds, err := s.Db.GetFeeds(context.Background())
+	if err != nil {
+		fmt.Printf("Could not retrieve feeds. %s\n", err)
+		os.Exit(1)
+	}
+
+	for _, feed := range feeds {
+		fmt.Printf("* %s,%s,%s\n", feed.Name, feed.Url, feed.Username)
+	}
+	return nil
+}
+
 func HandlerAgg(s *State, cmd CommandInput) error {
 	feed, err := FetchFeed(context.Background(), "https://www.wagslane.dev/index.xml")
 	if err != nil {
