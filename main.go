@@ -19,6 +19,7 @@ func main() {
 	commands.Register("register", config.HandlerRegister)
 	commands.Register("users", config.HandlerListUsers)
 	commands.Register("agg", config.HandlerAgg)
+	commands.Register("addfeed", config.HandlerAddFeed)
 	conf := config.Read()
 	db, err := sql.Open("postgres", conf.DBurl)
 	if err != nil {

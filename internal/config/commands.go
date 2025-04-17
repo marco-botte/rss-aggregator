@@ -49,7 +49,7 @@ func HandlerLogin(s *State, cmd CommandInput) error {
 
 func HandlerRegister(s *State, cmd CommandInput) error {
 	if len(cmd.Args) == 1 {
-		fmt.Println("Name is required")
+		fmt.Println("User name is required")
 		os.Exit(1)
 	}
 	user, err := s.Db.CreateUser(context.Background(), userParams(cmd.Args[1]))
@@ -96,6 +96,21 @@ func HandlerAgg(s *State, cmd CommandInput) error {
 	fmt.Printf("%v\n", feed)
 	return nil
 }
+
+func HandlerAddFeed(s *State, cmd CommandInput) error {
+	if len(cmd.Args) <= 2 {
+		fmt.Println("Feed name and url are required")
+		os.Exit(1)
+	}
+	feed, err := s.Db.CreateFeed(context.Background(), feedParams(cmd.Args[1], cmd.Args[2]))
+	if err != nil {
+		fmt.Printf("Error %s\n", err)
+		os.Exit(1)
+	}
+	fmt.Printf("Feed has been added:\n feed:\t%v\n", feed)
+	return nil
+}
+
 func userParams(name string) database.CreateUserParams {
 	now := time.Now()
 	return database.CreateUserParams{
@@ -106,6 +121,16 @@ func userParams(name string) database.CreateUserParams {
 	}
 }
 
+func feedParams(name string, url string) database.CreateFeedParams {
+	now := time.Now()
+	return database.CreateFeedParams{
+		ID:        uuid.New(),
+		CreatedAt: now,
+		UpdatedAt: now,
+		Name:      name,
+		Url:       url,
+	}
+}
 func (c *Commands) Register(name string, f func(*State, CommandInput) error) {
 	c.Map[name] = f
 }
