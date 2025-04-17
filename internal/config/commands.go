@@ -108,7 +108,12 @@ func HandlerAddFeed(s *State, cmd CommandInput) error {
 		fmt.Println("Feed name and url are required")
 		os.Exit(1)
 	}
-	feed, err := s.Db.CreateFeed(context.Background(), feedParams(cmd.Args[1], cmd.Args[2]))
+	user, err := s.Db.GetUser(context.Background(), s.Config.Username)
+	if err != nil {
+		fmt.Printf("Error. User may not exist. %s\n", err)
+		os.Exit(1)
+	}
+	feed, err := s.Db.CreateFeed(context.Background(), feedParams(cmd.Args[1], cmd.Args[2], user.ID))
 	if err != nil {
 		fmt.Printf("Error %s\n", err)
 		os.Exit(1)
@@ -127,7 +132,7 @@ func userParams(name string) database.CreateUserParams {
 	}
 }
 
-func feedParams(name string, url string) database.CreateFeedParams {
+func feedParams(name string, url string, userID uuid.UUID) database.CreateFeedParams {
 	now := time.Now()
 	return database.CreateFeedParams{
 		ID:        uuid.New(),
@@ -135,6 +140,7 @@ func feedParams(name string, url string) database.CreateFeedParams {
 		UpdatedAt: now,
 		Name:      name,
 		Url:       url,
+		UserID:    userID,
 	}
 }
 func (c *Commands) Register(name string, f func(*State, CommandInput) error) {
