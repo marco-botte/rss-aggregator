@@ -136,6 +136,30 @@ func HandlerAddFeed(s *State, cmd CommandInput) error {
 	return nil
 }
 
+func HandlerFollow(s *State, cmd CommandInput) error {
+	if len(cmd.Args) == 1 {
+		fmt.Println("Feed name is required")
+		os.Exit(1)
+	}
+	user, err := s.Db.GetUser(context.Background(), s.Config.Username)
+	if err != nil {
+		fmt.Printf("Error. User may not exist. %s\n", err)
+		os.Exit(1)
+	}
+	feed, err := s.Db.GetFeed(context.Background(), cmd.Args[1])
+	if err != nil {
+		fmt.Printf("Error. Feed may not exist. %s\n", err)
+		os.Exit(1)
+	}
+	feed_follow, err := s.Db.CreateFeedFollow(context.Background(), feedFollowParams(user.ID, feed.ID))
+	if err != nil {
+		fmt.Printf("Error %s\n", err)
+		os.Exit(1)
+	}
+	fmt.Printf("Feed %s has been followed by %s, follow_id: %s\n", feed.Name, user.Name, feed_follow.ID)
+	return nil
+}
+
 func userParams(name string) database.CreateUserParams {
 	now := time.Now()
 	return database.CreateUserParams{
@@ -157,6 +181,18 @@ func feedParams(name string, url string, userID uuid.UUID) database.CreateFeedPa
 		UserID:    userID,
 	}
 }
+
+func feedFollowParams(userID uuid.UUID, feedID uuid.UUID) database.CreateFeedFollowParams {
+	now := time.Now()
+	return database.CreateFeedFollowParams{
+		ID:        uuid.New(),
+		CreatedAt: now,
+		UpdatedAt: now,
+		UserID:    userID,
+		FeedID:    feedID,
+	}
+}
+
 func (c *Commands) Register(name string, f func(*State, CommandInput) error) {
 	c.Map[name] = f
 }
