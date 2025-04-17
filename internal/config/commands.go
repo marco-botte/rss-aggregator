@@ -119,13 +119,25 @@ func HandlerListFeeds(s *State, cmd CommandInput) error {
 }
 
 func HandlerAgg(s *State, cmd CommandInput) error {
-	feed, err := FetchFeed(context.Background(), "https://www.wagslane.dev/index.xml")
-	if err != nil {
-		fmt.Printf("Error while fetching feed. %s\n", err)
+	if len(cmd.Args) == 1 {
+		fmt.Println("Refresh interval is required")
 		os.Exit(1)
 	}
-	fmt.Printf("%v\n", feed)
-	return nil
+	refreshInterval, err := time.ParseDuration(cmd.Args[1])
+	if err != nil {
+		fmt.Println("Invalid refresh interval")
+		os.Exit(1)
+	}
+	if refreshInterval < 5*time.Second {
+		fmt.Println("Too short refresh interval")
+		os.Exit(1)
+	}
+	fmt.Printf("Collecting feeds every %s\n", cmd.Args[1])
+
+	ticker := time.NewTicker(refreshInterval)
+	for ; ; <-ticker.C {
+		ScrapeFeeds(s, cmd)
+	}
 }
 
 func HandlerAddFeed(s *State, cmd CommandInput, user database.User) error {

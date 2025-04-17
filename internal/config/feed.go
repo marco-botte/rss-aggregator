@@ -2,13 +2,15 @@ package config
 
 import (
 	"context"
+	"database/sql"
 	"encoding/xml"
 	"errors"
 	"fmt"
 	"html"
 	"io"
-	"log"
 	"net/http"
+	"rss-aggregator/internal/database"
+	"time"
 )
 
 type Channel struct {
@@ -36,13 +38,11 @@ func FetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 	req.Header.Set("user-agent", "rss-aggregator")
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		log.Fatal(err)
 		return nil, err
 	}
 	defer res.Body.Close()
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		log.Fatal(err)
 		return nil, err
 	}
 	if res.StatusCode > 299 {
@@ -53,7 +53,6 @@ func FetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 	var result RSSFeed
 	err = xml.Unmarshal(body, &result)
 	if err != nil {
-		log.Fatal(err)
 		return nil, err
 	}
 	return cleanResult(&result), nil
@@ -78,4 +77,29 @@ func cleanResult(feed *RSSFeed) *RSSFeed {
 		},
 	}
 	return &cleaned
+}
+
+func ScrapeFeeds(s *State, cmd CommandInput) error {
+	feed, err := s.Db.GetNextFeedToFetch(context.Background())
+	if err != nil {
+		fmt.Printf("Error getting next feed to fetch: %v", err)
+		return nil
+	}
+	now := time.Now()
+	params := database.MarkFeedFetchedParams{
+		ID:            feed.ID,
+		LastFetchedAt: sql.NullTime{Time: now, Valid: true},
+	}
+	s.Db.MarkFeedFetched(context.Background(), params)
+	rss_feed, err := FetchFeed(context.Background(), feed.Url)
+	if err != nil {
+		fmt.Printf("Error fetching feed: %v", err)
+		return nil
+	}
+	fmt.Printf("Titles from : %s\n", rss_feed.Channel.Title)
+	for _, item := range rss_feed.Channel.Item {
+		fmt.Printf("* %s\n", item.Title)
+
+	}
+	return nil
 }
