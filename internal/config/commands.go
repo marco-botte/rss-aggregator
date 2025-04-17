@@ -133,6 +133,12 @@ func HandlerAddFeed(s *State, cmd CommandInput) error {
 		os.Exit(1)
 	}
 	fmt.Printf("Feed has been added:\n feed:\t%v\n", feed)
+	feed_follow, err := s.Db.CreateFeedFollow(context.Background(), feedFollowParams(user.ID, feed.ID))
+	if err != nil {
+		fmt.Printf("Error %s\n", err)
+		os.Exit(1)
+	}
+	fmt.Printf("Feed has been created:\n feed_follow:\t%v\n", feed_follow)
 	return nil
 }
 
@@ -157,6 +163,23 @@ func HandlerFollow(s *State, cmd CommandInput) error {
 		os.Exit(1)
 	}
 	fmt.Printf("Feed %s has been followed by %s, follow_id: %s\n", feed.Name, user.Name, feed_follow.ID)
+	return nil
+}
+func HandlerFollowing(s *State, cmd CommandInput) error {
+	user, err := s.Db.GetUser(context.Background(), s.Config.Username)
+	if err != nil {
+		fmt.Printf("Error. Current user may not exist. %s\n", err)
+		os.Exit(1)
+	}
+	feed_follows, err := s.Db.GetFeedFollowsForUser(context.Background(), user.Name)
+	if err != nil {
+		fmt.Printf("Error %s\n", err)
+		os.Exit(1)
+	}
+	fmt.Printf("%s follows:\n", user.Name)
+	for _, feedFollow := range feed_follows {
+		fmt.Printf("* %s\n", feedFollow.FeedName)
+	}
 	return nil
 }
 

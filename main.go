@@ -22,6 +22,7 @@ func main() {
 	commands.Register("addfeed", config.HandlerAddFeed)
 	commands.Register("feeds", config.HandlerListFeeds)
 	commands.Register("follow", config.HandlerFollow)
+	commands.Register("following", config.HandlerFollowing)
 	conf := config.Read()
 	db, err := sql.Open("postgres", conf.DBurl)
 	if err != nil {
