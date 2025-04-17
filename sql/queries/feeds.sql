@@ -9,3 +9,6 @@ VALUES (
     $6
 )
 RETURNING *;
+
+-- name: DeleteOrphanedFeeds :exec
+DELETE FROM feeds WHERE user_id IS NULL;

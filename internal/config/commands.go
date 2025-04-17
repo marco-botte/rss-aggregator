@@ -63,9 +63,15 @@ func HandlerRegister(s *State, cmd CommandInput) error {
 }
 
 func HandlerReset(s *State, cmd CommandInput) error {
-	err := s.Db.DeleteUsers(context.Background())
-	if err != nil {
-		fmt.Printf("Error while resetting database. %s\n", err)
+	err_1 := s.Db.DeleteUsers(context.Background())
+	if err_1 != nil {
+		fmt.Printf("Error while resetting users database. %s\n", err_1)
+	}
+	err_2 := s.Db.DeleteOrphanedFeeds(context.Background())
+	if err_2 != nil {
+		fmt.Printf("Error while deleting orphaned feeds. %s\n", err_2)
+	}
+	if err_1 != nil || err_2 != nil {
 		os.Exit(1)
 	}
 	fmt.Println("Database successfully resetted")
