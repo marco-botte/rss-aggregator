@@ -32,6 +32,17 @@ func CleanArgs(args []string) []string {
 	return args[1:]
 }
 
+func MiddlewareLoggedIn(handler func(s *State, cmd CommandInput, user database.User) error) func(*State, CommandInput) error {
+	return func(s *State, cmd CommandInput) error {
+		user, err := s.Db.GetUser(context.Background(), s.Config.Username)
+		if err != nil {
+			fmt.Printf("Error. User may not exist. %s\n", err)
+			os.Exit(1)
+		}
+		return handler(s, cmd, user)
+	}
+}
+
 func HandlerLogin(s *State, cmd CommandInput) error {
 	if len(cmd.Args) == 1 {
 		fmt.Println("Username is required")
@@ -117,14 +128,9 @@ func HandlerAgg(s *State, cmd CommandInput) error {
 	return nil
 }
 
-func HandlerAddFeed(s *State, cmd CommandInput) error {
+func HandlerAddFeed(s *State, cmd CommandInput, user database.User) error {
 	if len(cmd.Args) <= 2 {
 		fmt.Println("Feed name and url are required")
-		os.Exit(1)
-	}
-	user, err := s.Db.GetUser(context.Background(), s.Config.Username)
-	if err != nil {
-		fmt.Printf("Error. User may not exist. %s\n", err)
 		os.Exit(1)
 	}
 	feed, err := s.Db.CreateFeed(context.Background(), feedParams(cmd.Args[1], cmd.Args[2], user.ID))
@@ -142,14 +148,9 @@ func HandlerAddFeed(s *State, cmd CommandInput) error {
 	return nil
 }
 
-func HandlerFollow(s *State, cmd CommandInput) error {
+func HandlerFollow(s *State, cmd CommandInput, user database.User) error {
 	if len(cmd.Args) == 1 {
 		fmt.Println("Feed name is required")
-		os.Exit(1)
-	}
-	user, err := s.Db.GetUser(context.Background(), s.Config.Username)
-	if err != nil {
-		fmt.Printf("Error. User may not exist. %s\n", err)
 		os.Exit(1)
 	}
 	feed, err := s.Db.GetFeed(context.Background(), cmd.Args[1])
@@ -166,7 +167,7 @@ func HandlerFollow(s *State, cmd CommandInput) error {
 	return nil
 }
 
-func HandlerUnfollow(s *State, cmd CommandInput) error {
+func HandlerUnfollow(s *State, cmd CommandInput, user database.User) error {
 	if len(cmd.Args) == 1 {
 		fmt.Println("Feed name is required")
 		os.Exit(1)
@@ -190,12 +191,7 @@ func HandlerUnfollow(s *State, cmd CommandInput) error {
 	fmt.Printf("Feed %s has been unfollowed by %s\n", feed.Name, user.Name)
 	return nil
 }
-func HandlerFollowing(s *State, cmd CommandInput) error {
-	user, err := s.Db.GetUser(context.Background(), s.Config.Username)
-	if err != nil {
-		fmt.Printf("Error. Current user may not exist. %s\n", err)
-		os.Exit(1)
-	}
+func HandlerFollowing(s *State, cmd CommandInput, user database.User) error {
 	feed_follows, err := s.Db.GetFeedFollowsForUser(context.Background(), user.Name)
 	if err != nil {
 		fmt.Printf("Error %s\n", err)
