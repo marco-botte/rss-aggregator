@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"rss-aggregator/internal/database"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -203,6 +204,7 @@ func HandlerUnfollow(s *State, cmd CommandInput, user database.User) error {
 	fmt.Printf("Feed %s has been unfollowed by %s\n", feed.Name, user.Name)
 	return nil
 }
+
 func HandlerFollowing(s *State, cmd CommandInput, user database.User) error {
 	feed_follows, err := s.Db.GetFeedFollowsForUser(context.Background(), user.Name)
 	if err != nil {
@@ -212,6 +214,31 @@ func HandlerFollowing(s *State, cmd CommandInput, user database.User) error {
 	fmt.Printf("%s follows:\n", user.Name)
 	for _, feedFollow := range feed_follows {
 		fmt.Printf("* %s\n", feedFollow.FeedName)
+	}
+	return nil
+}
+
+func HandlerBrowse(s *State, cmd CommandInput, user database.User) error {
+	postLimit := 2
+	if len(cmd.Args) >= 2 {
+		num, err := strconv.Atoi(cmd.Args[1])
+		if err == nil {
+			postLimit = num
+		}
+	}
+	params := database.GetPostsForUserParams{UserID: user.ID, Limit: int32(postLimit)}
+	posts, err := s.Db.GetPostsForUser(context.Background(), params)
+	if err != nil {
+		fmt.Printf("Error %s\n", err)
+		os.Exit(1)
+	}
+	fmt.Printf("\nLatest posts for %s:\n\n", user.Name)
+	for _, post := range posts {
+		desc := "Empty"
+		if post.Description.Valid {
+			desc = post.Description.String
+		}
+		fmt.Printf("#########\n%s\n#########\n\n%s\n\nContinue: %s\n\n", post.Title, desc, post.Url)
 	}
 	return nil
 }

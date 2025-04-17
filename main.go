@@ -24,6 +24,7 @@ func main() {
 	commands.Register("follow", config.MiddlewareLoggedIn(config.HandlerFollow))
 	commands.Register("unfollow", config.MiddlewareLoggedIn(config.HandlerUnfollow))
 	commands.Register("following", config.MiddlewareLoggedIn(config.HandlerFollowing))
+	commands.Register("browse", config.MiddlewareLoggedIn(config.HandlerBrowse))
 	conf := config.Read()
 	db, err := sql.Open("postgres", conf.DBurl)
 	if err != nil {
